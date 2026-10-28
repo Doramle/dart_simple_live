@@ -32,6 +32,15 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# [PATCH C-1] 修复 GitHub Actions 上的编译失败：
+# windows-latest 镜像已升级到 Visual Studio 2026（MSVC 14.5x），它把
+# <experimental/coroutine> 的弃用从警告改成了硬错误 C2338（STL1011）。
+# flutter_inappwebview_windows 通过 C++/WinRT 间接包含该头文件，
+# 因此插件编译直接失败。定义下面的宏即可抑制这个错误。
+# 该定义写在 include(flutter/generated_plugins.cmake) 之前，
+# 会自动传递给所有插件子目录。
+add_definitions(-D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by
