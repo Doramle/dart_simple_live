@@ -1,0 +1,49 @@
+name: build-windows
+
+# 只做一件事：手动编译 Windows 版并产出可下载的 artifact。
+# 去掉了上游的 tag 触发、Release 上传（需要 secrets.TOKEN），
+# 也去掉了 msix 打包（需要证书）。
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.x"
+          cache: true
+
+      - name: Enable Flutter Desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Restore packages
+        shell: bash
+        run: |
+          cd simple_live_app
+          flutter pub get
+
+      - name: Build Windows
+        shell: bash
+        run: |
+          cd simple_live_app
+          flutter build windows --release
+
+      - name: Verify output
+        shell: bash
+        run: |
+          ls -la simple_live_app/build/windows/x64/runner/Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: simple_live_windows_fixed
+          path: simple_live_app/build/windows/x64/runner/Release
+          if-no-files-found: error
